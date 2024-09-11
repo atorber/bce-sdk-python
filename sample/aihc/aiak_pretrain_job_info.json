@@ -2,7 +2,7 @@
     "MODEL_NAME": "qwen2-72b",
     "REPLICAS": "4",
     "VERSION": "v1",
-    "TRAINING_PHASE": "sft",
+    "TRAINING_PHASE": "pretrain",
     "TP": "",
     "PP": "",
     "DATASET_NAME": "WuDaoCorpus2.0_base_sample",

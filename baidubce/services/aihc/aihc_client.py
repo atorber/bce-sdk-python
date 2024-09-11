@@ -72,28 +72,28 @@ def get_command_from_sh(file_path):
 def write_chain_info(ak, sk, host):
     chain_info_temp.chain_info_temp['jobs'][0]['jobSpec']['envs'] = [
         {
-            "key": "AK",
+            "name": "AK",
             "value": ak
         },
         {
-            "key": "SK",
+            "name": "SK",
             "value": sk
         },
         {
-            "key": "HOST",
+            "name": "HOST",
             "value": host
         }]
     chain_info_temp.chain_info_temp['jobs'][1]['jobSpec']['envs'] = [
         {
-            "key": "AK",
+            "name": "AK",
             "value": ak
         },
         {
-            "key": "SK",
+            "name": "SK",
             "value": sk
         },
         {
-            "key": "HOST",
+            "name": "HOST",
             "value": host
         }]
 
@@ -378,19 +378,22 @@ def validate_index(index, jobs_count):
 
 
 # config_dir去掉，相应的看sh脚本如何传递参数
-def build_command(jobs, config_dir, index):
+def build_command(job_chain_info, config_dir, index):
+    jobs = job_chain_info['jobs']
     job_info = jobs[index]
     jobs_count = len(jobs)
+
     command = job_info['jobSpec']['command']
     if 'scriptFile' in job_info['jobSpec']:
         scriptFile = job_info['jobSpec']['scriptFile']
         command = get_command_from_sh(f'{config_dir}/{scriptFile}')
+        del job_info['jobSpec']['scriptFile']
 
     if index != jobs_count - 1:
-        jobs_str = json.dumps(jobs)
+        jobs_str = json.dumps(job_chain_info)
 
         # 保存配置文件
-        command_save_chain_info = f"cat << 'EOF' > chain_info.json\n{jobs_str}\nEOF"
+        command_save_chain_info = f"cat << 'EOF' > /workspace/chain_info.json\n{jobs_str}\nEOF"
 
         command_pip_install = r"""
 echo "job_chain:The previous task has been completed."
@@ -404,8 +407,8 @@ echo "job_chain:Next job is to be continued..."
         with open(f'{cur_path}/job_chain.py', 'r') as f:
             py_str = f.read()
 
-        command_save_py = f"cat << 'EOF' > job_chain.py\n{py_str}\nEOF"
-        command_call_py = f'python job_chain.py chain_info.json {index + 1}'
+        command_save_py = f"cat << 'EOF' > /workspace/job_chain.py\n{py_str}\nEOF"
+        command_call_py = f'python /workspace/job_chain.py /workspace/chain_info.json {index + 1}'
 
         command = f'{command}\n{command_save_chain_info}\n{command_pip_install}\n{command_save_py}\n{command_call_py}'
 
@@ -431,14 +434,14 @@ class AIHCClient(BceBaseClient):
     def create_job_chain(self, config_file=None, index=None):
         # 接收参数或配置文件路径
         try:
-            job_info = load_config(config_file)
-            jobs = job_info['jobs']
-            resourcePoolId = job_info['resourcePoolId']
+            job_chain_info = load_config(config_file)
+            jobs = job_chain_info['jobs']
+            resourcePoolId = job_chain_info['resourcePoolId']
 
             validate_index(index, len(jobs))
 
             config_dir = os.path.dirname(config_file)
-            command = build_command(jobs, config_dir,
+            command = build_command(job_chain_info, config_dir,
                                     index)
             cur_job_info = jobs[index]
             cur_job_info['jobSpec']['command'] = command
@@ -447,13 +450,13 @@ class AIHCClient(BceBaseClient):
                 del cur_job_info['jobSpec']['scriptFile']
 
             logging.info("Job info at index retrieved successfully.")
-            logging.info(json.dumps(cur_job_info))
+            logging.info('payload:', json.dumps(cur_job_info))
 
             logging.info("Creating AI job using openapi...")
 
             client_token = 'test-aihc-' + str(int(time.time()))
             logging.info('client_token: %s', client_token)
-
+            
             result = self.create_aijob(client_token=client_token,
                                        resourcePoolId=resourcePoolId,
                                        payload=cur_job_info)

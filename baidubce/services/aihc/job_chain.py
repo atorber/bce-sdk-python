@@ -28,7 +28,8 @@ def create_job_chain(config_file=None, index=None):
             index = int(args[1]) if len(args) > 1 else 0
         except ValueError:
             print("Invalid index value.")
-
+    else:
+        index = int(index)
     if not os.path.exists(config_file):
         raise FileNotFoundError(f"File {config_file} not found.")
 
