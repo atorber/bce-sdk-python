@@ -399,7 +399,7 @@ def build_command(job_chain_info, config_dir, index):
 echo "job_chain:The previous task has been completed."
 pip install future
 pip install pycryptodome
-pip install bce-python-sdk-next
+pip install bce-python-sdk-next --index-url https://pypi.org/simple
 pip install python-dotenv
 echo "job_chain:Next job is to be continued..."
 """
@@ -450,7 +450,7 @@ class AIHCClient(BceBaseClient):
                 del cur_job_info['jobSpec']['scriptFile']
 
             logging.info("Job info at index retrieved successfully.")
-            logging.info('payload:', json.dumps(cur_job_info))
+            logging.info('payload:%s', json.dumps(cur_job_info))
 
             logging.info("Creating AI job using openapi...")
 
