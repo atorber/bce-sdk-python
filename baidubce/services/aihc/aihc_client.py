@@ -63,6 +63,8 @@ def get_datasets_from_csv(file_path):
 
 
 def get_command_from_sh(file_path):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File {file_path} not found.")
     with open(file_path, 'r') as f:
         return f.read()
 
@@ -376,20 +378,13 @@ def validate_index(index, jobs_count):
 
 
 # config_dir去掉，相应的看sh脚本如何传递参数
-def build_command(jobs, config_dir,
-                  index):
+def build_command(jobs, config_dir, index):
     job_info = jobs[index]
     jobs_count = len(jobs)
     command = job_info['jobSpec']['command']
-    if (command.endswith('.sh') and
-        len(command.split('.')) == 2 and
-            command.startswith('bash') is not True):
-        command_path = os.path.join(config_dir, command)
-        if not os.path.exists(command_path):
-            raise FileNotFoundError(f"File {command_path} not found.")
-
-        with open(command_path, 'r') as f:
-            command = f.read()
+    if 'scriptFile' in job_info['jobSpec']:
+        scriptFile = job_info['jobSpec']['scriptFile']
+        command = get_command_from_sh(f'{config_dir}/{scriptFile}')
 
     if index != jobs_count - 1:
         jobs_str = json.dumps(jobs)
@@ -412,7 +407,7 @@ echo "job_chain:Next job is to be continued..."
         command_save_py = f"cat << 'EOF' > job_chain.py\n{py_str}\nEOF"
         command_call_py = f'python job_chain.py chain_info.json {index + 1}'
 
-        command += f'{command_save_chain_info}\n{command_pip_install}\n{command_save_py}\n{command_call_py}'
+        command = f'{command}\n{command_save_chain_info}\n{command_pip_install}\n{command_save_py}\n{command_call_py}'
 
     return command
 
@@ -445,14 +440,17 @@ class AIHCClient(BceBaseClient):
             config_dir = os.path.dirname(config_file)
             command = build_command(jobs, config_dir,
                                     index)
-            jobs[index]['jobSpec']['command'] = command
+            cur_job_info = jobs[index]
+            cur_job_info['jobSpec']['command'] = command
+
+            if 'scriptFile' in cur_job_info['jobSpec']:
+                del cur_job_info['jobSpec']['scriptFile']
 
             logging.info("Job info at index retrieved successfully.")
-            logging.info(json.dumps(jobs[index]))
+            logging.info(json.dumps(cur_job_info))
 
             logging.info("Creating AI job using openapi...")
 
-            cur_job_info = jobs[index]
             client_token = 'test-aihc-' + str(int(time.time()))
             logging.info('client_token: %s', client_token)
 
