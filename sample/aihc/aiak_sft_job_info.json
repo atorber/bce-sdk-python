@@ -1,12 +1,14 @@
 {
-    "MODEL_NAME": "llama2-7b",
-    "REPLICAS": "1",
+    "MODEL_NAME": "llama2-70b",
+    "REPLICAS": "4",
     "VERSION": "v1",
     "TRAINING_PHASE": "sft",
     "TP": "",
     "PP": "",
     "DATASET_NAME": "alpaca_zh-llama3-train",
     "IMAGE": "registry.baidubce.com/aihc-aiak/aiak-training-llm:ubuntu22.04-cu12.3-torch2.2.0-py310-bccl1.2.7.2_v2.1.1.5_release",
-    "MOUNT_PATH": "/root/pfs",
+    "MOUNT_PATH": "/workspace/pfs",
+    "MODEL_URL": "",
+    "DATASET_URL": "",
     "JSON_KEYS": ""
 }
