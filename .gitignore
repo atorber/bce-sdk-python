@@ -8,5 +8,8 @@ build
 dist
 bce-python-sdk-**
 bce_python_sdk_*
-sample/aihc/*-train-*.json
 sample.log
+.venv/*/
+sample/aihc/job_config/*.sh
+sample/aihc/job_config/*.json
+.venv/pyvenv.cfg

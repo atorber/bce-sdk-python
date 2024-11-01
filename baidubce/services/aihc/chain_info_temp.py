@@ -497,10 +497,10 @@ def generate_aiak_parameter(chain_job_config=None, aiak_job_config=None):
             chain_job_config = args[0]
             aiak_job_config = args[1]
 
-    print('=============================\n')
-    print('chain_job_config:', chain_job_config)
-    print('aiak_job_config:', aiak_job_config)
-    print('=============================\n')
+    # print('=============================\n')
+    # print('chain_job_config:', chain_job_config)
+    # print('aiak_job_config:', aiak_job_config)
+    # print('=============================\n')
 
     try:
         aiak_job_config_json = json.loads(aiak_job_config)
@@ -750,31 +750,31 @@ def generate_aiak_parameter(chain_job_config=None, aiak_job_config=None):
         json.dump(chain_info, f, indent=4, ensure_ascii=False)
 
     one_job_command = (
-        '#! /bin/bash\n\n'
-        f'# 任务名称：{TRAIN_JOB_NAME}\n'
-        f'# {IMAGE}\n'
-        f'# 环境变量：CUDA_DEVICE_MAX_CONNECTIONS=1\n'
-        f'# 挂载路径：{MOUNT_PATH}\n'
-        f'# 实例数量：{REPLICAS}\n\n'
-        f'MODEL_BOS_PATH={MODEL_BOS_PATH}\n'
-        f'MODEL_NAME={MODEL_NAME}\n'
-        f'TP={TP}\n'
-        f'PP={PP}\n'
-        f'LOAD={LOAD}\n'
-        f'SAVE={CHECKPOINT_PATH}\n'
-        f'TOKENIZER_PATH={TOKENIZER_PATH}\n'
-        f'DATASET_BOS_PATH={DATASET_BOS_PATH}\n'
-        f'INPUT_DATA={INPUT_DATA}\n'
-        f'OUTPUT_PREFIX={OUTPUT_PREFIX}\n'
-        f'OUTPUT_PATH={OUTPUT_PREFIX}\n'
-        f'DATA_PATH={DATA_PATH}\n'
-        f'DATA_CACHE_PATH={DATA_CACHE_PATH}\n'
-        f'JSON_KEYS={JSON_KEYS}\n'
-        f'CHAT_TEMPLATE={CHAT_TEMPLATE}\n'
-        f'CHECKPOINT_PATH={CHECKPOINT_PATH}\n'
-        f'CUDA_DEVICE_MAX_CONNECTIONS=1\n'
-        f'{str(ck_job["jobSpec"]["command"]).replace('#! /bin/bash', '')}\n'
-        f'{str(dp_job["jobSpec"]["command"]).replace('#!/bin/bash', '')}\n'
+        '#!/bin/bash\n\n'
+        f'# 任务名称: {TRAIN_JOB_NAME}\n'
+        f'# 镜像: {IMAGE}\n'
+        f'# 环境变量: CUDA_DEVICE_MAX_CONNECTIONS=1\n'
+        f'# 挂载路径: {MOUNT_PATH}\n'
+        f'# 实例数量: {REPLICAS}\n\n'
+        f'export MODEL_BOS_PATH="{MODEL_BOS_PATH}"\n'
+        f'export MODEL_NAME="{MODEL_NAME}"\n'
+        f'export TP={TP}\n'
+        f'export PP={PP}\n'
+        f'export LOAD="{LOAD}"\n'
+        f'export SAVE="{CHECKPOINT_PATH}"\n'
+        f'export TOKENIZER_PATH="{TOKENIZER_PATH}"\n'
+        f'export DATASET_BOS_PATH="{DATASET_BOS_PATH}"\n'
+        f'export INPUT_DATA="{INPUT_DATA}"\n'
+        f'export OUTPUT_PREFIX="{OUTPUT_PREFIX}"\n'
+        f'export OUTPUT_PATH="{OUTPUT_PREFIX}"\n'
+        f'export DATA_PATH="{DATA_PATH}"\n'
+        f'export DATA_CACHE_PATH="{DATA_CACHE_PATH}"\n'
+        f'export JSON_KEYS="{JSON_KEYS}"\n'
+        f'export CHAT_TEMPLATE="{CHAT_TEMPLATE}"\n'
+        f'export CHECKPOINT_PATH="{CHECKPOINT_PATH}"\n'
+        f'export CUDA_DEVICE_MAX_CONNECTIONS=1\n\n'
+        f'{ck_job["jobSpec"]["command"].replace("#!/bin/bash", "")}\n'
+        f'{dp_job["jobSpec"]["command"].replace("#!/bin/bash", "")}\n'
         f'{train_job["jobSpec"]["command"]}\n'
     )
 

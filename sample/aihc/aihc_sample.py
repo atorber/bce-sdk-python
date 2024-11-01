@@ -15,6 +15,7 @@ Samples for AIHC client.
 
 from baidubce.services.aihc.aihc_client import AIHCClient
 import aihc_sample_conf
+import json
 
 if __name__ == "__main__":
     import logging
@@ -24,9 +25,12 @@ if __name__ == "__main__":
 
     aihc_client = AIHCClient(aihc_sample_conf.config)
     client_token = "client_token"
+    print("job_chain_info:")
+    job_chain_info = ''
+    print(json.dumps(job_chain_info, indent=4, ensure_ascii=False))
 
     # create aijob
-    resourcePoolId = 'cce-e0isdmib'
+    # resourcePoolId = 'cce-e0isdmib'
     # payload = {}
     # create_response = aihc_client.create_aijob(
     #     client_token=client_token,
@@ -39,10 +43,26 @@ if __name__ == "__main__":
     # __logger.debug("[Sample AIHC] ai_jobs:%s", ai_jobs)
     # print(ai_jobs)
 
-    chain_job_config = "/Users/zhangsan/Documents/GitHub/bce-sdk-python/sample/aihc"
-    aiak_job_config = "/Users/zhangsan/Documents/GitHub/bce-sdk-python/sample/aihc/aiak_pretrain_job_info.json"
-    job_chain_info = aihc_client.generate_aiak_parameter(chain_job_config, aiak_job_config)
-    print(job_chain_info)
+    chain_job_config = "/Users/luyuchao/Documents/GitHub/bce-sdk-python/sample/aihc"
+    # aiak_job_config = "/Users/luyuchao/Documents/GitHub/bce-sdk-python/sample/aihc/aiak_pretrain_job_info.json"
+    # aiak_job_config = "/Users/luyuchao/Documents/GitHub/bce-sdk-python/sample/aihc/aiak_sft_job_info.json"
+    aiak_job_config = json.dumps({
+        "MODEL_NAME": "llama2-70b",
+        "REPLICAS": "4",
+        "VERSION": "v1",
+        "TRAINING_PHASE": "sft",
+        "TP": "",
+        "PP": "",
+        "DATASET_NAME": "alpaca_zh-llama3-train",
+        "IMAGE": "registry.baidubce.com/aihc-aiak/aiak-training-llm:ubuntu22.04-cu12.3-torch2.2.0-py310-bccl1.2.7.2_v2.1.1.5_release",
+        "MOUNT_PATH": "/workspace/pfs",
+        "MODEL_URL": "",
+        "DATASET_URL": "",
+        "JSON_KEYS": ""
+    })
 
-    # job_info_config = "/Users/zhangsan/Documents/GitHub/bce-sdk-python/sample/aihc/sft-qwen2-72b-train-v1.json"
+    job_chain_info = aihc_client.generate_aiak_parameter(chain_job_config, aiak_job_config)
+    # print(job_chain_info)
+
+    # job_info_config = "/Users/luyuchao/Documents/GitHub/bce-sdk-python/sample/aihc/sft-llama2-7b-train-v1.json"
     # job_info = aihc_client.create_job_chain(job_info_config, 1)
