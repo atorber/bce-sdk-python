@@ -44,6 +44,375 @@ class AIHCClient(BceBaseClient):
     def __init__(self, config=None):
         BceBaseClient.__init__(self, config)
 
+    # 查询资源池列表
+    def get_all_pools(self, pageNo = 1, pageSize = 10):
+        """
+        get all pools
+
+        :return: aijob dict
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "orderBy": "createdAt",
+            "order": "desc"
+        }
+        if pageNo is not None:
+            params["pageNo"] = pageNo
+        if pageSize is not None:
+            params["pageSize"] = pageSize
+        path = b'/api/v1/resourcepools'
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 查询资源池详情
+    def get_pool(self, resourcePoolId):
+        """
+        get pool
+
+        :return: pool info
+        :rtype: baidubce.bce_response.BceResponse
+        """
+
+        path = f'/api/v1/resourcepools/{resourcePoolId}'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 查询资源池节点列表
+    def get_all_nodes(self, resourcePoolId, pageNo = 1, pageSize = 10):
+        """
+        get all nodes
+
+        :return: nodes dict
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "orderBy": "createdAt",
+            "order": "desc"
+        }
+        if pageNo is not None:
+            params["pageNo"] = pageNo
+        if pageSize is not None:
+            params["pageSize"] = pageSize
+        path = f'/api/v1/resourcepools/{resourcePoolId}/nodes'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 查询资源池队列列表
+    def get_all_queues(self, resourcePoolId, pageNo = 1, pageSize = 10):
+        """
+        get all queue
+
+        :return: queue dict
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "orderBy": "createdAt",
+            "order": "desc"
+        }
+        if pageNo is not None:
+            params["pageNo"] = pageNo
+        if pageSize is not None:
+            params["pageSize"] = pageSize
+        path = f'/api/v1/resourcepools/{resourcePoolId}/queue'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 查询资源池队列详情
+    def get_queue(self, resourcePoolId, queueName):
+        """
+        get queue
+
+        :return: queue info
+        :rtype: baidubce.bce_response.BceResponse
+        """
+
+        path = f'/api/v1/resourcepools/{resourcePoolId}/queue/{queueName}'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 删除队列
+    def delete_queue(self, resourcePoolId, queueName):
+        """
+        delete queue
+
+        :return: bce_request_id
+        :rtype: baidubce.bce_response.BceResponses
+        """
+        path = f'/api/v1/resourcepools/{resourcePoolId}/queue/{queueName}'
+        return self._send_request(http_methods.DELETE, path,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 更新队列
+    def update_queue(self, resourcePoolId, queueName, payload):
+        """
+        update queue
+
+        :return: bce_request_id
+        :rtype: baidubce.bce_response.BceResponses
+        """
+        path = f'/api/v1/resourcepools/{resourcePoolId}/queue/{queueName}'
+        body = json.dumps(payload).encode('utf-8')
+        return self._send_request(http_methods.PUT, path=path, body=body,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 查询任务列表
+    def get_all_aijobs(self, resourcePoolId, pageNo = 1, pageSize = 10):
+        """
+        get all aijobs
+
+        :return: aijob dict
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId,
+            "orderBy": "createdAt",
+            "order": "desc"
+        }
+        if pageNo is not None:
+            params["pageNo"] = pageNo
+        if pageSize is not None:
+            params["pageSize"] = pageSize
+        path = b'/api/v1/aijobs'
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 创建任务
+    def create_aijob(
+            self,
+            client_token,
+            resourcePoolId,
+            payload):
+        # print('create_aijob is called')
+        path = b"/api/v1/aijobs"
+        params = {
+            "clientToken": client_token,
+            "resourcePoolId": resourcePoolId
+        }
+
+        body = json.dumps(payload).encode('utf-8')
+        return self._send_request(http_methods.POST, path=path, body=body,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 查询任务详情
+    def get_aijob(self, resourcePoolId, aijobId):
+        """
+        get aijob
+
+        :param aijob_id: aijob id to delete
+        :type aijob_id: string
+
+        :return: aijob info
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+
+        path = f'/api/v1/aijobs/{aijobId}'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 更新任务
+    def update_aijob(self, resourcePoolId, aijobId, priority):
+        """
+        update job
+
+        :param job_id: job id to delete
+        :type job_id: string
+
+        :return: bce_request_id
+        :rtype: baidubce.bce_response.BceResponses
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+        payload = {
+            "priority": priority
+        }
+        path = f'/api/v1/aijobs/{aijobId}'
+        body = json.dumps(payload).encode('utf-8')
+        return self._send_request(http_methods.PUT, path=path, 
+                                  params=params,
+                                  body=body,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 停止任务
+    def stop_aijob(self, resourcePoolId, aijobId):
+        """
+        stop job
+
+        :param job_id: job id to delete
+        :type job_id: string
+
+        :return: bce_request_id
+        :rtype: baidubce.bce_response.BceResponses
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+        path = f'/api/v1/aijobs/{aijobId}/stop'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.POST, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 删除任务
+    def delete_aijob(self, resourcePoolId, aijobId):
+        """
+        delete job
+
+        :param job_id: job id to delete
+        :type job_id: string
+
+        :return: bce_request_id
+        :rtype: baidubce.bce_response.BceResponses
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+        path = f'/api/v1/aijobs/{aijobId}'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.DELETE, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 查询任务事件
+    def get_aijob_events(self, resourcePoolId, aijobId, jobFramework):
+        """
+        get aijob events
+
+        :param aijob_id: aijob id to delete
+        :type aijob_id: string
+
+        :return: aijob events
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId,
+            "jobFramework": jobFramework
+        }
+
+        path = f'/api/v1/aijobs/{aijobId}/events'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 查询任务日志
+    def get_aijob_logs(self, resourcePoolId, aijobId, podName):
+        """
+        get aijob logs
+
+        :param aijob_id: aijob id to delete
+        :type aijob_id: string
+
+        :return: aijob logs
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+
+        path = f'/api/v1/aijobs/{aijobId}/pods/{podName}/logs'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 查询任务Pod事件
+    def get_aijob_pod_events(self, resourcePoolId, aijobId, podName, jobFramework):
+        """
+        get aijob pod events
+
+        :param aijob_id: aijob id to delete
+        :type aijob_id: string
+
+        :return: aijob pod events
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId,
+            "jobFramework": jobFramework
+        }
+
+        path = f'/api/v1/aijobs/{aijobId}/pods/{podName}/events'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+    
+    # 查询训练任务监控
+    def get_aijob_metrics(self, resourcePoolId, aijobId):
+        """
+        get aijob metrics
+
+        :param aijob_id: aijob id to delete
+        :type aijob_id: string
+
+        :return: aijob metrics
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+
+        path = f'/api/v1/aijobs/{aijobId}/metrics'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 查询任务所在节点列表
+    def get_aijob_nodes(self, resourcePoolId, aijobId):
+        """
+        get aijob nodes
+
+        :param aijob_id: aijob id to delete
+        :type aijob_id: string
+
+        :return: aijob nodes
+        :rtype: baidubce.bce_response.BceResponse
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+
+        path = f'/api/v1/aijobs/{aijobId}/nodes'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path,
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 查询任务Pod webterminal链接
+    def get_webterminal(self, resourcePoolId, jobId, podName):
+        """
+        GET /api/v1/aijobs/{jobId}/pods/{podName}/webterminal
+
+        :return: aijob dict
+        :rtype: baidubce.bce_response.BceResponse
+
+        """
+        params = {
+            "resourcePoolId": resourcePoolId
+        }
+        path = f'/api/v1/aijobs/{jobId}/pods/{podName}/webterminal'
+        path = bytes(path, encoding='utf-8')
+        return self._send_request(http_methods.GET, path, 
+                                  params=params,
+                                  body_parser=aihc_handler.parse_json)
+
+    # 生成AIAK参数
     def generate_aiak_parameter(self, chain_job_config=None, aiak_job_config=None):
         ak = self.config.credentials.access_key_id.decode('utf-8')
         sk = self.config.credentials.secret_access_key.decode('utf-8')
@@ -52,6 +421,7 @@ class AIHCClient(BceBaseClient):
         # print(ak, sk, host)
         return chain_info_temp.generate_aiak_parameter(chain_job_config, aiak_job_config)
 
+    # 创建任务链   
     def create_job_chain(self, config_file=None, index=None):
         # 接收参数或配置文件路径
         try:
@@ -94,68 +464,7 @@ class AIHCClient(BceBaseClient):
             logging.error("Error: %s", e)
         except Exception as e:
             logging.error("An unexpected error occurred: %s", e)
-
-    def create_aijob(
-            self,
-            client_token,
-            resourcePoolId,
-            payload):
-        # print('create_aijob is called')
-        path = b"/api/v1/aijobs"
-        params = {
-            "clientToken": client_token,
-            "resourcePoolId": resourcePoolId
-        }
-
-        body = json.dumps(payload).encode('utf-8')
-        return self._send_request(http_methods.POST, path=path, body=body,
-                                  params=params,
-                                  body_parser=aihc_handler.parse_json)
-
-    def delete_aijob(self, aijob_id):
-        """
-        delete job
-
-        :param job_id: job id to delete
-        :type job_id: string
-
-        :return: bce_request_id
-        :rtype: baidubce.bce_response.BceResponses
-        """
-        path = b'/api/v1/aijobs/' + aijob_id
-        return self._send_request(http_methods.DELETE, path,
-                                  body_parser=aihc_handler.parse_json)
-
-    def get_aijob(self, aijob_id):
-        """
-        get aijob
-
-        :param aijob_id: aijob id to delete
-        :type aijob_id: string
-
-        :return: aijob info
-        :rtype: baidubce.bce_response.BceResponse
-        """
-
-        path = b'/api/v1/aijobs/' + aijob_id
-        return self._send_request(http_methods.GET, path,
-                                  body_parser=aihc_handler.parse_json)
-
-    def get_all_aijobs(self, resourcePoolId):
-        """
-        get all aijobs
-
-        :return: aijob dict
-        :rtype: baidubce.bce_response.BceResponse
-        """
-        params = {
-            "resourcePoolId": resourcePoolId
-        }
-        path = b'/api/v1/aijobs'
-        return self._send_request(http_methods.GET, path,
-                                  params=params,
-                                  body_parser=aihc_handler.parse_json)
-
+    
     def _merge_config(self, config):
         if config is None:
             return self.config
