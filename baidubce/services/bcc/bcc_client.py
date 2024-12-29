@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (c) 2014 Baidu.com, Inc. All Rights Reserved
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
@@ -91,7 +92,7 @@ class BccClient(bce_base_client.BceBaseClient):
                         security_group_ids=None, enterprise_security_group_ids=None, ehc_cluster_id=None,
                         kunlunCard=None, isomerismCard=None, file_systems=None, user_data=None, is_open_hosteye=False,
                         deletion_protection=None, res_group_id=None,
-                        client_token=None, config=None, card_count=1, isomerism_card=None):
+                        client_token=None, config=None, card_count=1, isomerism_card=None, is_keep_image_login=None):
         """
         Create a bcc Instance with the specified options.
         You must fill the field of clientToken,which is especially for keeping idempotent.
@@ -436,6 +437,8 @@ class BccClient(bce_base_client.BceBaseClient):
         if isomerism_card is not None:
             body['isomerismCard'] = isomerism_card
             body['cardCount'] = card_count if card_count > 1 else 1
+        if is_keep_image_login is not None:
+            body['keepImageLogin'] = is_keep_image_login
         if auto_renew_time != 0:
             body['autoRenewTime'] = auto_renew_time
         if auto_renew_time_unit is None:
@@ -700,7 +703,8 @@ class BccClient(bce_base_client.BceBaseClient):
                                spec_id=None, relation_tag=False, is_open_ipv6=False, deletion_protection=None,
                                enterprise_security_group_id=None, security_group_ids=None, res_group_id=None,
                                enterprise_security_group_ids=None, isomerismCard=None, file_systems=None,
-                               card_count=1, isomerism_card=None, is_eip_auto_related_delete=False):
+                               card_count=1, isomerism_card=None, is_eip_auto_related_delete=False
+                               , is_keep_image_login=None):
         """
         Create a bcc Instance with the specified options.
         You must fill the field of clientToken,which is especially for keeping idempotent.
@@ -1069,6 +1073,8 @@ class BccClient(bce_base_client.BceBaseClient):
             body['userData'] = user_data
         if res_group_id is not None:
             body['resGroupId'] = res_group_id
+        if is_keep_image_login is not None:
+            body['keepImageLogin'] = is_keep_image_login
         body['isEipAutoRelatedDelete'] = is_eip_auto_related_delete
 
         return self._send_request(http_methods.POST, path, json.dumps(body),
@@ -5448,7 +5454,8 @@ class BccClient(bce_base_client.BceBaseClient):
             body['keypairId'] = keypair_id
         return self._send_request(http_methods.PUT, path, body=json.dumps(body), params=params, config=config)
 
-    def change_to_prepaid(self, instance_id, duration, relation_cds=None, client_token=None, config=None):
+    def change_to_prepaid(self, instance_id, duration, relation_cds, auto_renew, auto_renew_period=None,
+                          client_token=None, config=None):
         """
         Change instance pay timing to prepaid.
 
@@ -5463,6 +5470,17 @@ class BccClient(bce_base_client.BceBaseClient):
         :param relation_cds:
             Set whether to chagne the associated data disk. True - change; False - no change. Default is False.
         :type relation_cds: bool
+
+        :param auto_renew:
+            Whether to enable automatic renewal, defaults to False.
+        :type auto_renew: bool
+
+
+        :param auto_renew_period:
+            Duration of each automatic renewal(Unit: months).
+            Value range: 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 24, 36. If not specified, the default is 1.
+            This parameter is effective only when auto_renew is set to true.
+        :type auto_renew_period: int
 
         :return:
         :rtype baidubce.bce_response.BceResponse
@@ -5479,6 +5497,9 @@ class BccClient(bce_base_client.BceBaseClient):
         body = {
             "duration": duration
         }
+        if auto_renew is not None:
+            body['autoRenew'] = auto_renew
+            body['autoRenewPeriod'] = auto_renew_period
         if relation_cds is not None:
             body['relationCds'] = relation_cds
         return self._send_request(http_methods.POST, path, body=json.dumps(body), params=params, config=config)
@@ -6756,6 +6777,22 @@ class BccClient(bce_base_client.BceBaseClient):
             body['reservedInstances'] = reserved_instances_list
 
         return self._send_request(http_methods.PUT, path, body=json.dumps(body), params=params, config=config)
+
+    def get_instance_user_data(self, instance_id, client_token=None, config=None):
+        """
+        get_instance_user_data
+        """
+        path = b'/instance/attribute/getUserdata'
+        params = {}
+        if client_token is None:
+            params['clientToken'] = generate_client_token()
+        else:
+            params['clientToken'] = client_token
+        body = {
+            "instanceId": instance_id
+        }
+        return self._send_request(http_methods.POST, path, json.dumps(body),
+                                  params=params, config=config)
 
 
 def generate_client_token_by_uuid():
