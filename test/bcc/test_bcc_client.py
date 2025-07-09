@@ -56,7 +56,7 @@ post_paid_billing = bcc_model.Billing('Postpaid', 1)
 pre_paid_billing = bcc_model.Billing('Prepaid', 2)
 
 force_stop = False
-admin_pass = 'Caesar@test111'
+admin_pass = '**********'
 eip_name = 'test-eip-name'
 hostname = 'test-hostname'
 auto_seq_suffix = True
@@ -74,8 +74,9 @@ user_data = "#!/bin/sh\\necho 'Hello World' | tee /root/userdata_test.txt"
 deletion_protection = 1
 is_open_hosteye = False
 tags = [bcc_model.TagModel("test", "bcc")]
-auto_snapshot_policy = bcc_model.AutoSnapshotPolicyModel('asp-name', [1,2], [1,2])
+auto_snapshot_policy = bcc_model.AutoSnapshotPolicyModel('asp-name', [1, 2], [1, 2])
 res_group_id = 'RESG-UtT3P4x4KxF'
+
 
 def generate_client_token_by_random():
     """
@@ -330,6 +331,14 @@ class TestBccClient(unittest.TestCase):
         print(resp.instances)
         self.assertEqual(len(resp.instances), 1)
 
+    def test_list_instances_by_fuzzy_instance_name(self):
+        """
+        test case for list_instances
+        """
+        resp = self.client.list_instances(fuzzy_instance_name="instance-name")
+        print(resp.instances)
+        self.assertEqual(len(resp.instances), 1)
+
     def test_get_instance(self):
         """
         test case for get_instance
@@ -448,9 +457,9 @@ class TestBccClient(unittest.TestCase):
         """
         client_token = generate_client_token()
         self.assertEqual(
-            type(self.client.resize_instance(instance_id,
-                                             2, 4, False, 1, 40,
-                                             client_token)),
+            type(self.client.resize_instance("i-Z3rZB8WG",
+                                             2, 8, False, None, None, False,
+                                             client_token, None)),
             baidubce.bce_response.BceResponse)
 
     def test_bind_instance_to_security_group(self):
@@ -486,11 +495,14 @@ class TestBccClient(unittest.TestCase):
         billing = pre_paid_billing
         client_token = generate_client_token()
         related_renew_flag = 'CDS_EIP'
+        cds_custom_period = [bcc_model.CdsCustomPeriod(2, 'volumeId')]
         self.assertEqual(
             type(self.client.purchase_reserved_instance(instance_id,
                                                         billing,
                                                         related_renew_flag,
-                                                        client_token)),
+                                                        client_token,
+                                                        None,
+                                                        cds_custom_period)),
             baidubce.bce_response.BceResponse)
 
     def test_list_instance_specs(self):
@@ -631,7 +643,9 @@ class TestBccClient(unittest.TestCase):
         self.assertEqual(
             type(self.client.purchase_reserved_volume(volume_id,
                                                       billing,
-                                                      client_token)),
+                                                      client_token,
+                                                      None,
+                                                      instance_id)),
             baidubce.bce_response.BceResponse)
 
     def test_create_image_from_instance_id(self):
@@ -871,7 +885,7 @@ class TestBccClient(unittest.TestCase):
 
         self.assertEqual(
             type(self.client.unbind_reserved_instance_from_tags(reserved_instance_ids=reserved_instance_ids,
-                                                            tags=instance_tags)),
+                                                                tags=instance_tags)),
             baidubce.bce_response.BceResponse)
 
     def test_bind_tags_batch_by_resource_type(self):
@@ -1173,6 +1187,26 @@ class TestBccClient(unittest.TestCase):
             type(resp),
             baidubce.bce_response.BceResponse)
 
+    def test_create_instance_by_spec_with_eni_ids(self):
+        """
+        test case for create_instance_by_spec with eni_ids
+        """
+        client_token = generate_client_token()
+        image_id = 'm-FBfg6s7W'
+        instance_name = 'Caesar_test_instance_' + client_token
+        eni_ids = ["eni-5pywhzspsar5"]
+        resp = self.client.create_instance_by_spec("bcc.g4.c1m1",
+                                                   image_id,
+                                                   name=instance_name,
+                                                   admin_pass=admin_pass,
+                                                   enable_jumbo_frame=False,
+                                                   ehc_cluster_id='ehc-bk4hM1N3',
+                                                   eni_ids=eni_ids,
+                                                   client_token=client_token)
+        self.assertEqual(
+            type(resp),
+            baidubce.bce_response.BceResponse)
+
     def test_auto_release_instance(self):
         """
         test case for auto_release_instance
@@ -1196,9 +1230,9 @@ class TestBccClient(unittest.TestCase):
         """
         instance_id = "i-3OWgGtoG"
         resp = self.client.release_prepaid_instance_with_related_resources(instance_id=instance_id,
-                                                                      related_release_flag=True,
-                                                                      delete_cds_snapshot_flag=True,
-                                                                      delete_related_enis_flag=True)
+                                                                           related_release_flag=True,
+                                                                           delete_cds_snapshot_flag=True,
+                                                                           delete_related_enis_flag=True)
         print(resp)
 
     def test_get_instance_with_deploy_set(self):
@@ -1566,7 +1600,8 @@ class TestBccClient(unittest.TestCase):
         """
         test case for resize_instance_by_spec
         """
-        resp = self.client.resize_instance_by_spec(instance_id="i-oUXBvdIx", spec='bcc.ic1.c1m1')
+        resp = self.client.resize_instance_by_spec(instance_id="i-Z3rZB8WG", spec='bcc.g5.c4m16',
+                                                   enable_jumbo_frame=False)
         self.assertEqual(
             type(resp),
             baidubce.bce_response.BceResponse)
@@ -1594,7 +1629,7 @@ class TestBccClient(unittest.TestCase):
         test case for change_to_prepaid
         """
         resp = self.client.change_to_prepaid(instance_id="i-GREjIhjh", duration=3, relation_cds=True,
-                                            auto_renew=True, auto_renew_period=2)
+                                             auto_renew=True, auto_renew_period=2)
         self.assertEqual(
             type(resp),
             baidubce.bce_response.BceResponse)
@@ -1755,7 +1790,8 @@ class TestBccClient(unittest.TestCase):
         test case for batch_resize_instance
         """
         resp = self.client.batch_resize_instance(instance_ids=['i-FhvOuv4t'], spec='bcc.g4.c1m1',
-                                                 subnet_id='subnet_id', logical_zone='zone_name', internal_ip_v4='ipv4')
+                                                 subnet_id='subnet_id', logical_zone='zone_name', internal_ip_v4='ipv4',
+                                                 enable_jumbo_frame=False)
         self.assertEqual(
             type(resp),
             baidubce.bce_response.BceResponse)
@@ -2117,6 +2153,83 @@ class TestBccClient(unittest.TestCase):
         test get instance userdata
         """
         print(self.client.get_instance_user_data(instance_id='i-b34ycow2'))
+
+    def test_enter_rescue_mode(self):
+        """
+        test get cds price
+        """
+        resp = self.client.enter_rescue_mode(instance_id="i-kotclGLf", force_stop=True,
+                                             password='*************')
+
+        self.assertEqual(
+            type(resp),
+            baidubce.bce_response.BceResponse)
+        if resp is not None and resp.content is not None:
+            print(json.loads(resp.content.decode('utf-8')))
+        else:
+            print(resp)
+
+    def test_exit_rescue_mode(self):
+        """
+        test get cds price
+        """
+        resp = self.client.exit_rescue_mode(instance_id="i-kotclGLf")
+
+        self.assertEqual(
+            type(resp),
+            baidubce.bce_response.BceResponse)
+        if resp is not None and resp.content is not None:
+            print(json.loads(resp.content.decode('utf-8')))
+        else:
+            print(resp)
+
+    def test_bind_sg(self):
+        """
+        test get cds price
+        """
+        resp = self.client.bind_sg(instance_ids=["i-LO8XGmwh"],
+                                   security_group_ids=['esg-r8dz9yhm57kk'],
+                                   security_group_type='enterprise')
+
+        self.assertEqual(
+            type(resp),
+            baidubce.bce_response.BceResponse)
+        if resp is not None and resp.content is not None:
+            print(json.loads(resp.content.decode('utf-8')))
+        else:
+            print(resp)
+
+    def test_unbind_sg(self):
+        """
+        test get cds price
+        """
+        resp = self.client.unbind_sg(instance_ids=["i-LO8XGmwh"],
+                                     security_group_ids=['esg-r8dz9yhm57kk'],
+                                     security_group_type='enterprise')
+
+        self.assertEqual(
+            type(resp),
+            baidubce.bce_response.BceResponse)
+        if resp is not None and resp.content is not None:
+            print(json.loads(resp.content.decode('utf-8')))
+        else:
+            print(resp)
+
+    def test_replace_sg(self):
+        """
+        test get cds price
+        """
+        resp = self.client.replace_sg(instance_ids=["i-LO8XGmwh"],
+                                      security_group_ids=['esg-r8dz9yhm57kk'],
+                                      security_group_type='enterprise')
+
+        self.assertEqual(
+            type(resp),
+            baidubce.bce_response.BceResponse)
+        if resp is not None and resp.content is not None:
+            print(json.loads(resp.content.decode('utf-8')))
+        else:
+            print(resp)
 
 
 if __name__ == '__main__':

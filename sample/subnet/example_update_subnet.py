@@ -14,9 +14,9 @@ if __name__ == '__main__':
     config = BceClientConfiguration(credentials=BceCredentials(access_key_id=ak, secret_access_key=sk),
                                     endpoint=endpoint)
     subnet_client = subnet_client.SubnetClient(config)  # client 初始化
-    subnet_id = "xxxxx" # 要更新的子网的id
+    subnet_id = "sbn-wmqndyxvuxdf" # 要更新的子网的id
     try:
-        resp = subnet_client.update_subnet(subnet_id, name="subnet_name")  # 更新子网的名称
+        resp = subnet_client.update_subnet(subnet_id, name="subnet_name", enable_ipv6=True)  # 更新子网的名称和开启ipv6
         print("[example] update subnet response: %s" % resp)
     except BceHttpClientError as e:
         print("Exception when calling api: %s\n" % e)
