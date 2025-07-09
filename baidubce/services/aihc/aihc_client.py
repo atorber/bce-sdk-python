@@ -1,7 +1,7 @@
 # Copyright 2014 Baidu, Inc.
 
 """
-This module provides a client class for TSDB.
+This module provides a client class for AIHC.
 """
 
 import copy
@@ -80,7 +80,7 @@ class AIHCClient(BceBaseClient):
                                   body_parser=aihc_handler.parse_json)
     
     # 查询资源池节点列表
-    def get_all_nodes(self, resourcePoolId, pageNo = 1, pageSize = 10):
+    def get_all_nodes(self, resourcePoolId, pageNo = 1, pageSize = 50):
         """
         get all nodes
 
@@ -102,7 +102,7 @@ class AIHCClient(BceBaseClient):
                                   body_parser=aihc_handler.parse_json)
     
     # 查询资源池队列列表
-    def get_all_queues(self, resourcePoolId, pageNo = 1, pageSize = 10):
+    def get_all_queues(self, resourcePoolId, pageNo = 1, pageSize = 50):
         """
         get all queue
 
@@ -163,7 +163,7 @@ class AIHCClient(BceBaseClient):
                                   body_parser=aihc_handler.parse_json)
     
     # 查询任务列表
-    def get_all_aijobs(self, resourcePoolId, pageNo = 1, pageSize = 10):
+    def get_all_aijobs(self, resourcePoolId, pageNo = 1, pageSize = 50):
         """
         get all aijobs
 
