@@ -86,7 +86,8 @@ setup(
               'baidubce.services.esg',
               'baidubce.services.probe',
               'baidubce.services.etGateway',
-              'baidubce.services.ca'
+              'baidubce.services.ca',
+              'baidubce.services.bls'
               ],
     include_package_data=True,
     package_data={
