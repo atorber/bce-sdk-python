@@ -1,0 +1,190 @@
+{
+    "resourcePoolId": "cce-e0isdmib",
+    "jobs": [
+        {
+            "name": "sft-llama2-70b-ck2mc-v1",
+            "jobSpec": {
+                "command": "\n#! /bin/bash\n\necho \"LOAD: ${LOAD}\"\necho \"SAVE: ${SAVE}\"\necho \"MODEL_BOS_PATH: ${MODEL_BOS_PATH}\"\necho \"MODEL_NAME: ${MODEL_NAME}\"\necho \"TP: ${TP}\"\necho \"PP: ${PP}\"\n\n# 如果SAVE文件夹已存在，则终止启动，打印提示信息\nif [ -d \"${SAVE}\" ]; then\n    echo \"The SAVE folder ${SAVE} already exists, you can use it directly. Or you can delete it and run this script again.\"\n    exit 1\nelse\n    echo \"The SAVE folder ${SAVE} does not exist, start to convert checkpoint.\"\nfi\n\n# 检查/mnt/cluster/huggingface.co/meta-llama/Llama-2-70b-hf是否存在，不存在则下载\nif [ ! -d \"${LOAD}\" ]; then\n    # 下载bcecmd程序\n    wget https://doc.bce.baidu.com/bce-documentation/BOS/linux-bcecmd-0.4.5.zip\n    # 解压\n    unzip linux-bcecmd-0.4.5.zip\n    cd linux-bcecmd-0.4.5\n    echo \"Start to download checkpoint...\"\n    ./bcecmd  bos sync ${MODEL_BOS_PATH} ${LOAD}\n    echo \"Download checkpoint done.\"\nelse\n    echo \"The LOAD folder ${LOAD} already exists,no need to download.\"\nfi\n\necho \"Start to convert checkpoint...\"\n\nAIAK_TRAINING_PATH=/workspace/AIAK-Training-LLM\nCONVERT_CHECKPOINT_PATH=\"$AIAK_TRAINING_PATH/tools/convert_checkpoint\"\nMEGATRON_PATH=${MEGATRON_PATH:-\"/workspace/AIAK-Megatron\"}\n\n# 当前不支持 optim 部分转换，通过 --no_save_optim 和 --no_load_optim 关闭；\npython $CONVERT_CHECKPOINT_PATH/model.py \\\n    --load_platform=huggingface \\\n    --save_platform=mcore \\\n    --common_config_path=$CONVERT_CHECKPOINT_PATH/config/${MODEL_NAME}.json \\\n    --tensor_model_parallel_size=${TP} \\\n    --pipeline_model_parallel_size=${PP} \\\n    --load_ckpt_path=$LOAD \\\n    --save_ckpt_path=$SAVE \\\n    --megatron_path=$MEGATRON_PATH \\\n    --no_save_optim \\\n    --no_load_optim \\\n    --safetensors\n\necho \"Convert checkpoint done.\"\necho \"The converted checkpoint is saved in: \\n ${SAVE}.\"\n",
+                "image": "registry.baidubce.com/aihc-aiak/aiak-training-llm:ubuntu22.04-cu12.3-torch2.2.0-py310-bccl1.2.7.2_v2.1.1.5_release",
+                "replicas": 1,
+                "envs": [
+                    {
+                        "name": "AK",
+                        "value": ""
+                    },
+                    {
+                        "name": "SK",
+                        "value": ""
+                    },
+                    {
+                        "name": "HOST",
+                        "value": ""
+                    },
+                    {
+                        "name": "MODEL_BOS_PATH",
+                        "value": "bos:/cce-ai-datasets/huggingface.co/meta-llama/Llama-2-70b-hf"
+                    },
+                    {
+                        "name": "MODEL_NAME",
+                        "value": "llama2-70b"
+                    },
+                    {
+                        "name": "TP",
+                        "value": "4"
+                    },
+                    {
+                        "name": "PP",
+                        "value": "4"
+                    },
+                    {
+                        "name": "LOAD",
+                        "value": "/workspace/pfs/models/llama2-70b/hf/huggingface.co/meta-llama/Llama-2-70b-hf"
+                    },
+                    {
+                        "name": "SAVE",
+                        "value": "/workspace/pfs/models/llama2-70b/mcore/huggingface.co/meta-llama/Llama-2-70b-hf/tp4_pp4"
+                    }
+                ]
+            },
+            "labels": [
+                {
+                    "key": "aijob.cce.baidubce.com/ai-user-id",
+                    "value": "69bb4999b2044af8bbda25aec2f1e1f2"
+                },
+                {
+                    "key": "aijob.cce.baidubce.com/ai-user-name",
+                    "value": "zhangsan"
+                }
+            ],
+            "datasources": [
+                {
+                    "type": "pfs",
+                    "name": "pfs-oYQuh4",
+                    "mountPath": "/root/pfs"
+                }
+            ],
+            "queue": "default",
+            "priority": "normal",
+            "jobFramework": "PyTorchJob"
+        },
+        {
+            "queue": "default",
+            "priority": "normal",
+            "jobFramework": "PyTorchJob",
+            "name": "sft-llama2-70b-dp-v1",
+            "jobSpec": {
+                "command": "\n\n#!/bin/bash\n\n# 检查INPUT_DATA是否存在，不存在则下载\nif [ ! -d \"${INPUT_DATA}\" ]; then\n    # 下载bcecmd程序\n    wget https://doc.bce.baidu.com/bce-documentation/BOS/linux-bcecmd-0.4.5.zip\n    # 解压\n    unzip linux-bcecmd-0.4.5.zip\n    cd linux-bcecmd-0.4.5\n\n    echo \"Start to download data...\"\n    # 下载测试数据集\n    ./bcecmd bos cp ${DATASET_BOS_PATH} ${INPUT_DATA} --restart --quiet --yes\nfi\n\necho \"Download data done.\"\n\nMEGATRON_PATH=/workspace/AIAK-Megatron\nAIAK_TRAINING_PATH=${AIAK_TRAINING_PATH:-\"/workspace/AIAK-Training-LLM\"}\n\nPYTHONPATH=$MEGATRON_PATH:$AIAK_TRAINING_PATH:$PYTHONPATH \\\n    python ${AIAK_TRAINING_PATH}/tools/data_preprocess/preprocess_sft_data.py \\\n        --input ${INPUT_DATA} \\\n        --output ${OUTPUT_PATH} \\\n        --seq-length 2048 \\\n        --chat-template ${CHAT_TEMPLATE} \\\n        --tokenizer-type HFTokenizer \\\n        --hf-tokenizer-path $TOKENIZER_PATH \\\n        --workers 50 \\\n        --split 100,0,0\n        # --packing-sft-data \\\n        # --train-on-prompt \\\n        # --eod-mask-loss \\\n        # --sft-dataset-config /workspace/AIAK-Training-LLM/configs/sft_dataset_config.json \\\n        # --sft-dataset custom_dataset \\\necho \"Data preprocess done.\"\n",
+                "image": "registry.baidubce.com/aihc-aiak/aiak-training-llm:ubuntu22.04-cu12.3-torch2.2.0-py310-bccl1.2.7.2_v2.1.1.5_release",
+                "replicas": 1,
+                "envs": [
+                    {
+                        "name": "AK",
+                        "value": ""
+                    },
+                    {
+                        "name": "SK",
+                        "value": ""
+                    },
+                    {
+                        "name": "HOST",
+                        "value": ""
+                    },
+                    {
+                        "name": "DATASET_BOS_PATH",
+                        "value": "bos:/cce-ai-datasets/datasets/aiak/alpaca_zh-llama3-train.json"
+                    },
+                    {
+                        "name": "TOKENIZER_PATH",
+                        "value": "/workspace/pfs/models/llama2-70b/hf/huggingface.co/meta-llama/Llama-2-70b-hf"
+                    },
+                    {
+                        "name": "INPUT_DATA",
+                        "value": "/workspace/pfs/datasets/datasets/aiak/alpaca_zh-llama3-train.json"
+                    },
+                    {
+                        "name": "OUTPUT_PATH",
+                        "value": "/workspace/pfs/datasets/datasets/aiak/alpaca_zh-llama3-train"
+                    },
+                    {
+                        "name": "CHAT_TEMPLATE",
+                        "value": "llama2"
+                    }
+                ]
+            },
+            "labels": [
+                {
+                    "key": "aijob.cce.baidubce.com/ai-user-id",
+                    "value": "69bb4999b2044af8bbda25aec2f1e1f2"
+                },
+                {
+                    "key": "aijob.cce.baidubce.com/ai-user-name",
+                    "value": "zhangsan"
+                }
+            ],
+            "datasources": [
+                {
+                    "type": "pfs",
+                    "name": "pfs-oYQuh4",
+                    "mountPath": "/root/pfs"
+                }
+            ]
+        },
+        {
+            "queue": "default",
+            "priority": "normal",
+            "jobFramework": "PyTorchJob",
+            "name": "sft-llama2-70b-train-v1",
+            "jobSpec": {
+                "command": "bash /workspace/AIAK-Training-LLM/examples/llama2/finetuning/sft_llama2_70b.sh",
+                "image": "registry.baidubce.com/aihc-aiak/aiak-training-llm:ubuntu22.04-cu12.3-torch2.2.0-py310-bccl1.2.7.2_v2.1.1.5_release",
+                "replicas": 4,
+                "resources": [
+                    {
+                        "name": "baidu.com/a800_80g_cgpu",
+                        "quantity": 8
+                    }
+                ],
+                "enableRDMA": true,
+                "envs": [
+                    {
+                        "name": "CUDA_DEVICE_MAX_CONNECTIONS",
+                        "value": "1"
+                    },
+                    {
+                        "name": "DATA_PATH",
+                        "value": "/workspace/pfs/datasets/datasets/aiak/alpaca_zh-llama3-train.json"
+                    },
+                    {
+                        "name": "DATA_CACHE_PATH",
+                        "value": "/workspace/pfs/datasets/datasets/aiak/alpaca_zh-llama3-train_cache"
+                    },
+                    {
+                        "name": "TOKENIZER_PATH",
+                        "value": "/workspace/pfs/models/llama2-70b/hf/huggingface.co/meta-llama/Llama-2-70b-hf"
+                    },
+                    {
+                        "name": "CHECKPOINT_PATH",
+                        "value": "/workspace/pfs/models/llama2-70b/mcore/huggingface.co/meta-llama/Llama-2-70b-hf/tp4_pp4"
+                    }
+                ]
+            },
+            "labels": [
+                {
+                    "key": "aijob.cce.baidubce.com/ai-user-id",
+                    "value": "69bb4999b2044af8bbda25aec2f1e1f2"
+                },
+                {
+                    "key": "aijob.cce.baidubce.com/ai-user-name",
+                    "value": "zhangsan"
+                }
+            ],
+            "datasources": [
+                {
+                    "type": "pfs",
+                    "name": "pfs-oYQuh4",
+                    "mountPath": "/root/pfs"
+                }
+            ]
+        }
+    ]
+}
