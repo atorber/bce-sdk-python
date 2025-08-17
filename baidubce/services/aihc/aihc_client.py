@@ -22,6 +22,7 @@ from baidubce.http import http_methods
 from baidubce.services.aihc import aihc_handler
 from baidubce.services.aihc import chain_info_temp
 
+from baidubce.services.aihc.base.aihc_base_client import AIHCBaseClient
 from baidubce.services.aihc.modules.job.job_client import JobClient
 from baidubce.services.aihc.modules.dataset.dataset_client import DatasetClient
 from baidubce.services.aihc.modules.model.model_client import ModelClient
@@ -102,6 +103,7 @@ class AihcClient:
             config: 配置对象
                 baidubce.bce_client_configuration.BceClientConfiguration实例
         """
+        self.base_client = AIHCBaseClient(config)
         self.job = JobClient(config)
         self.dataset = DatasetClient(config)
         self.model = ModelClient(config)
