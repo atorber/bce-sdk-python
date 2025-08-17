@@ -6,8 +6,8 @@
 # coding=utf-8
 
 from baidubce.exception import BceHttpClientError, BceServerError
-# from baidubce.services.aihc.aihc_model import JobConfig
 from baidubce.services.aihc.aihc_client import AihcClient
+from baidubce.http import http_methods
 
 import sample.aihc.aihc_sample_conf as aihc_sample_conf
 import json
@@ -25,8 +25,8 @@ def main():
     基础客户端示例
     '''
     try:
-        response = aihc_client.base_client.send_request('GET', '/v2/aihc/base/sample')
-        print(json.dumps(response, ensure_ascii=False))
+        response = aihc_client.base_client._send_request(http_methods.GET, b'/', params={'action': 'DescribeDatasets'})
+        print(response)
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('BceServerError: %s', e.last_error.message)
