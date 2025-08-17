@@ -9,6 +9,9 @@ import json
 import os
 import time
 import logging
+import inspect
+from functools import wraps
+from typing import get_type_hints
 from baidubce.auth import bce_v1_signer
 from baidubce.bce_base_client import BceBaseClient
 from baidubce.http import bce_http_client
@@ -163,6 +166,19 @@ class AihcClient:
 
 
 def generate_aiak_parameter(chain_job_config=None, aiak_job_config=None):
+    """
+    生成 AIAK 参数并写入链路信息。
+
+    该函数会将 AK/SK/Host 写入临时链路配置，并基于给定配置
+    生成 AIAK 所需的参数。
+
+    Args:
+        chain_job_config: 链式任务的配置对象或字典
+        aiak_job_config: AIAK 任务的配置对象或字典
+
+    Returns:
+        dict: AIAK 参数字典
+    """
     ak = ''
     sk = ''
     host = ''
@@ -601,6 +617,18 @@ class AIHCClient(BceBaseClient):
             logging.error("An unexpected error occurred: %s", e)
     
     def _merge_config(self, config):
+        """
+        合并传入的配置与客户端默认配置。
+
+        若传入配置为 None，则返回现有客户端配置；否则在不为 None 的字段上
+        覆盖默认配置，返回合并后的新配置。
+
+        Args:
+            config: 可选的 `BceClientConfiguration` 实例
+
+        Returns:
+            BceClientConfiguration: 合并后的配置对象
+        """
         if config is None:
             return self.config
         else:
@@ -615,6 +643,23 @@ class AIHCClient(BceBaseClient):
             headers=None,
             config=None,
             body_parser=None):
+        """
+        发送 HTTP 请求的内部通用方法。
+
+        该方法封装了签名、头设置以及响应解析逻辑。
+
+        Args:
+            http_method: HTTP 方法，来自 `baidubce.http.http_methods`
+            path: 请求路径，bytes 或 str
+            body: 请求体，bytes
+            params: 查询参数字典
+            headers: 头部字典
+            config: 临时覆盖的客户端配置
+            body_parser: 响应解析器
+
+        Returns:
+            baidubce.bce_response.BceResponse: 通用响应对象
+        """
         config = self._merge_config(config)
         if headers is None:
             headers = {http_headers.CONTENT_TYPE: http_content_types.JSON}
