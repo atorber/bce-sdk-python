@@ -15,13 +15,19 @@ Configuration for bcm samples.
 # !/usr/bin/env python
 # coding=utf-8
 
+import os
 import logging
 from baidubce.bce_client_configuration import BceClientConfiguration
 from baidubce.auth.bce_credentials import BceCredentials
 
-HOST = 'aihc host'
-AK = 'your-access-key-id'
-SK = 'your-secret-access-key'
+# 引入环境变量配置.env文件中的配置
+from dotenv import load_dotenv
+load_dotenv()
+
+# 环境变量中获取配置
+HOST = os.environ.get('HOST')
+AK = os.environ.get('AK')
+SK = os.environ.get('SK')
 
 logger = logging.getLogger('baidubce.http.aihc_http_client')
 fh = logging.FileHandler('sample.log')
