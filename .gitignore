@@ -14,3 +14,4 @@ sample/aihc/job_config/*.sh
 sample/aihc/job_config/*.json
 .venv/pyvenv.cfg
 .env
+.qoder/*
