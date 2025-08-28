@@ -27,7 +27,7 @@ with io.open(os.path.join("baidubce", "__init__.py"), "rt") as f:
     SDK_VERSION = re.search(r"SDK_VERSION = b'(.*?)'", f.read()).group(1)
 
 setup(
-    name='bce-python-sdk',
+    name='bce-python-sdk-next',
     version=SDK_VERSION,
     install_requires=['pycryptodome>=3.8.0',
                       'future>=0.6.0',
@@ -38,6 +38,14 @@ setup(
               'baidubce.http',
               'baidubce.retry',
               'baidubce.services',
+              'baidubce.services.aihc',
+              'baidubce.services.aihc.base',
+              'baidubce.services.aihc.modules',
+              'baidubce.services.aihc.modules.dataset',
+              'baidubce.services.aihc.modules.dev_instance',
+              'baidubce.services.aihc.modules.job',
+              'baidubce.services.aihc.modules.model',
+              'baidubce.services.aihc.modules.service',
               'baidubce.services.autoscaling',
               'baidubce.services.bos',
               'baidubce.services.bts',
@@ -88,9 +96,18 @@ setup(
               'baidubce.services.ca',
               'baidubce.services.bls'
               ],
+    include_package_data=True,
+    package_data={
+        'baidubce': [
+            '/services/aihc/aiak_dict/*.sh',
+            '/services/aihc/aiak_dict/*.csv',
+            '/services/aihc/aiak_dict/*.json'
+        ],  # 指定需要打包的CSV文件
+    },
     url='http://bce.baidu.com',
     license='Apache License 2.0',
-    author='',
-    author_email='',
-    description='BCE SDK for python'
+    author='atorber',
+    author_email='atorber@163.com',
+    description='BCE SDK for python',
+    long_description="""BCE SDK for python by atorber.""",
 )
