@@ -39,6 +39,7 @@ python -m sample.aihc.aihc_job_sample
 python -m sample.aihc.aihc_service_sample
 python -m sample.aihc.aihc_devinstance_sample
 python -m sample.aihc.aihc_base_sample
+python -m sample.aihc.aihc_pool_sample
 ```
 
 ## 常见问题

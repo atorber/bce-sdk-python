@@ -15,11 +15,13 @@ AIHC base client module.
 """
 import copy
 import json
+import time
 
 from baidubce import bce_base_client
 from baidubce.auth import bce_v1_signer
 from baidubce.http import handler, bce_http_client, http_methods
 from baidubce.services.aihc import aihc_handler
+from baidubce.services.aihc.base.aihc_request import aihc_request, get_utf8_value
 
 
 class AIHCBaseClient(bce_base_client.BceBaseClient):
@@ -54,9 +56,33 @@ class AIHCBaseClient(bce_base_client.BceBaseClient):
             new_config = copy.copy(self.config)
             new_config.merge_non_none_values(config)
             return new_config
+    
+    def _aihc_request(self, http_method, path,
+                      headers=None, params=None, body=None,
+                      config=None, body_parser=None):
+        config = self._merge_config(config)
+        if body_parser is None:
+            body_parser = aihc_handler.aihc_parse_json
+        host = get_utf8_value(config.endpoint)
+        # print(host)
+        if headers is None:
+            headers = {
+                'version': 'v2',
+                'Content-Type': 'application/json',
+                'Host': host,
+            }
+        else:
+            headers['version'] = 'v2'
+            headers['Content-Type'] = 'application/json'
+            headers[ 'Host'] = host
+
+        http_method = get_utf8_value(http_method)
+        # print(http_method, path, body, headers, params)
+        return aihc_request(config,[aihc_handler.aihc_parse_error, body_parser],
+            http_method, path, body, headers, params)
 
     def _send_request(self, http_method, path,
-                      body=None, headers=None, params=None,
+                      headers=None, params=None, body=None,
                       config=None, body_parser=None):
         """
         发送HTTP请求
@@ -64,9 +90,9 @@ class AIHCBaseClient(bce_base_client.BceBaseClient):
         Args:
             http_method: HTTP方法
             path: 请求路径
-            body: 请求体（可选）
             headers: 请求头（可选）
             params: 请求参数（可选）
+            body: 请求体（可选）
             config: 配置对象（可选）
             body_parser: 响应体解析器（可选）
             
@@ -80,14 +106,17 @@ class AIHCBaseClient(bce_base_client.BceBaseClient):
         if headers is None:
             headers = {
                 b'version': AIHCBaseClient.version,
-                b'Content-Type': b'application/json'
+                b'Content-Type': b'application/json',
             }
         else:
             headers[b'version'] = AIHCBaseClient.version
             headers[b'Content-Type'] = b'application/json'
 
+        # headers[http_headers.HOST] = b'aihc.bj.baidubce.com'
+        headers[b'x-bce-date'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()).encode('utf-8')
+
         return bce_http_client.send_request(
-            config, bce_v1_signer.sign, [handler.parse_error, body_parser],
+            config, bce_v1_signer.sign, [aihc_handler.parse_error, body_parser],
             http_method, path, body, headers, params)
     
     def _send_job_request(self, http_method, path,

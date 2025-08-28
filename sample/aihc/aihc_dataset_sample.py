@@ -110,7 +110,7 @@ def main():
         response = aihc_client.dataset.DescribeDatasets()
         print(json.dumps(to_dict(response), ensure_ascii=False))
         __logger.info('DescribeDatasets: %s', response.__dict__.keys())
-        dataset_id = response.datasets[0].id
+        dataset_id = response.datasets[0].id # pyright: ignore[reportOptionalSubscript]
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'
@@ -121,9 +121,12 @@ def main():
     # 查询数据集详情
     try:
         __logger.info('--------------------DescribeDataset start--------------------')
-        response = aihc_client.dataset.DescribeDataset(datasetId=dataset_id)
-        print(json.dumps(to_dict(response), ensure_ascii=False))
-        __logger.info('DescribeDataset: %s', response.__dict__.keys())
+        if dataset_id is not None:
+            response = aihc_client.dataset.DescribeDataset(datasetId=dataset_id)
+            print(json.dumps(to_dict(response), ensure_ascii=False))
+            __logger.info('DescribeDataset: %s', response.__dict__.keys())
+        else:
+            __logger.warning('No dataset id available for DescribeDataset')
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'
@@ -134,10 +137,14 @@ def main():
     # 获取数据集版本列表
     try:
         __logger.info('--------------------DescribeDatasetVersions start--------------------')
-        response = aihc_client.dataset.DescribeDatasetVersions(datasetId=dataset_id)
-        print(json.dumps(to_dict(response), ensure_ascii=False))
-        __logger.info('DescribeDatasetVersions: %s', response.__dict__.keys())
-        version_id = response.versions[0].id
+        if dataset_id is not None:
+            response = aihc_client.dataset.DescribeDatasetVersions(datasetId=dataset_id)
+            print(json.dumps(to_dict(response), ensure_ascii=False))
+            __logger.info('DescribeDatasetVersions: %s', response.__dict__.keys())
+            if response.versions:
+                version_id = response.versions[0].id
+        else:
+            __logger.warning('No dataset id available for DescribeDatasetVersions')
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'
@@ -148,9 +155,12 @@ def main():
     # 获取数据集版本详情
     try:
         __logger.info('--------------------DescribeDatasetVersion start--------------------')
-        response = aihc_client.dataset.DescribeDatasetVersion(datasetId=dataset_id, versionId=version_id)
-        print(json.dumps(to_dict(response), ensure_ascii=False))
-        __logger.info('DescribeDatasetVersion: %s', response.__dict__.keys())
+        if dataset_id is not None and version_id is not None:
+            response = aihc_client.dataset.DescribeDatasetVersion(datasetId=dataset_id, versionId=version_id)
+            print(json.dumps(to_dict(response), ensure_ascii=False))
+            __logger.info('DescribeDatasetVersion: %s', response.__dict__.keys())
+        else:
+            __logger.warning('No dataset id or version id available for DescribeDatasetVersion')
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'
@@ -161,9 +171,12 @@ def main():
     # 修改数据集
     try:
         __logger.info('--------------------ModifyDataset start--------------------')
-        response = aihc_client.dataset.ModifyDataset(datasetId=dataset_id, name='test_dataset_2xxx')
-        print(json.dumps(to_dict(response), ensure_ascii=False))
-        __logger.info('ModifyDataset: %s', response.__dict__.keys())
+        if dataset_id is not None:
+            response = aihc_client.dataset.ModifyDataset(datasetId=dataset_id, name='test_dataset_2xxx')
+            print(json.dumps(to_dict(response), ensure_ascii=False))
+            __logger.info('ModifyDataset: %s', response.__dict__.keys())
+        else:
+            __logger.warning('No dataset id available for ModifyDataset')
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'
@@ -174,9 +187,12 @@ def main():
     # 删除数据集
     try:
         __logger.info('--------------------DeleteDataset start--------------------')
-        response = aihc_client.dataset.DeleteDataset(datasetId=dataset_id)
-        print(json.dumps(to_dict(response), ensure_ascii=False))
-        __logger.info('DeleteDataset: %s', response.__dict__.keys())
+        if dataset_id is not None:
+            response = aihc_client.dataset.DeleteDataset(datasetId=dataset_id)
+            print(json.dumps(to_dict(response), ensure_ascii=False))
+            __logger.info('DeleteDataset: %s', response.__dict__.keys())
+        else:
+            __logger.warning('No dataset id available for DeleteDataset')
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'

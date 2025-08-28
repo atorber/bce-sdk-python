@@ -28,6 +28,8 @@ from baidubce.services.aihc.modules.dataset.dataset_client import DatasetClient
 from baidubce.services.aihc.modules.model.model_client import ModelClient
 from baidubce.services.aihc.modules.service.service_client import ServiceClient
 from baidubce.services.aihc.modules.dev_instance.dev_instance_client import DevInstanceClient
+from baidubce.services.aihc.modules.resource_pool.pool_client import ResourcePoolClient
+from baidubce.services.aihc.modules.queue.queue_client import QueueClient
 
 cur_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -109,6 +111,8 @@ class AihcClient:
         self.model = ModelClient(config)
         self.service = ServiceClient(config)
         self.dev_instance = DevInstanceClient(config)
+        self.resource_pool = ResourcePoolClient(config)
+        self.queue = QueueClient(config)
         
         # 动态创建代理方法
         self._setup_proxy_methods()
@@ -119,6 +123,17 @@ class AihcClient:
         
         为各个子模块的方法创建代理，使主客户端可以直接调用子模块的方法
         """
+
+        # 资源池相关接口
+        pool_methods = [
+            'DescribeResourcePools', 'DescribeResourcePool'
+        ]
+
+        # 队列相关接口
+        queue_methods = [
+            'DescribeQueues', 'DescribeQueue'
+        ]
+
         # 任务相关接口
         job_methods = [
             'DescribeJobs', 'DescribeJob', 'DeleteJob', 'ModifyJob', 
@@ -151,6 +166,10 @@ class AihcClient:
         ]
         
         # 为每个方法创建代理
+        for method_name in pool_methods:
+            setattr(self, method_name, create_typed_proxy_method(self.resource_pool, method_name))
+        for method_name in queue_methods:
+            setattr(self, method_name, create_typed_proxy_method(self.queue, method_name))
         for method_name in job_methods:
             setattr(self, method_name, create_typed_proxy_method(self.job, method_name))
         

@@ -98,72 +98,80 @@ def main():
         BceServerError: 当服务器返回错误时抛出
     """
 
-    model_id = None
-    version_id = None
+    pool_id = 'aihc-serverless'
+    queue_id = '' 
 
     # create a aihc client
     aihc_client = AihcClient(aihc_sample_conf.config)
 
-    # 查询模型列表
+    # 查询资源池
     try:
-        __logger.info('--------------------------------DescribeModels start...--------------------------------')
-        response = aihc_client.model.DescribeModels()
+        __logger.info('--------------------------------DescribeResourcePools start...--------------------------------')
+        response = aihc_client.resource_pool.DescribeResourcePools(resourcePoolType='common', pageNumber=1, pageSize=2)
         # 打印response的数据类型
-        __logger.info('DescribeModels response is: %s', type(response))
-        print(response.metadata)
+        __logger.info('DescribeResourcePools response is: %s', type(response))
         print(response.raw_data)
-        __logger.info('DescribeModels: %s', response.__dict__.keys())
-        model_id = response.models[0].id
+        __logger.info('DescribeResourcePools: %s', response.__dict__.keys())
+        if hasattr(response, 'resourcePools') and response.resourcePools:
+            pool_id = response.resourcePools[0].resourcePoolId
     except BceHttpClientError as e:
         if isinstance(e.last_error, BceServerError):
             __logger.error('send request failed. Response %s, code: %s, msg: %s'
                            % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
         else:
             __logger.error('send request failed. Unknown exception: %s' % e)
+    except Exception as e:
+        __logger.error('Unexpected error: %s' % e)
 
-    # 查询模型详情
-    try:
-        __logger.info('--------------------DescribeModel start--------------------')
-        response = aihc_client.model.DescribeModel(modelId=model_id)
-        print(response.metadata)
-        print(response.raw_data)
-        __logger.info('DescribeModel: %s', response.__dict__.keys())
-    except BceHttpClientError as e:
-        if isinstance(e.last_error, BceServerError):
-            __logger.error('send request failed. Response %s, code: %s, msg: %s'
-                           % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
-        else:
-            __logger.error('send request failed. Unknown exception: %s' % e)
+    # 查询资源池详情
+    if pool_id and pool_id != 'aihc-serverless':
+        try:
+            __logger.info('--------------------DescribeResourcePool start--------------------')
+            response = aihc_client.resource_pool.DescribeResourcePool(pool_id)
+            print(response.raw_data)
+            __logger.info('DescribeResourcePool: %s', response.__dict__.keys())
+        except BceHttpClientError as e:
+            if isinstance(e.last_error, BceServerError):
+                __logger.error('send request failed. Response %s, code: %s, msg: %s'
+                               % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
+            else:
+                __logger.error('send request failed. Unknown exception: %s' % e)
+        except Exception as e:
+            __logger.error('Unexpected error: %s' % e)
 
-    # 查询模型版本列表
-    try:
-        __logger.info('--------------------DescribeModelVersions start--------------------')
-        response = aihc_client.model.DescribeModelVersions(modelId=model_id)
-        print(response.metadata)
-        print(response.raw_data)
-        __logger.info('DescribeModelVersions: %s', response.__dict__.keys())
-        version_id = response.versions[0].id
-    except BceHttpClientError as e:
-        if isinstance(e.last_error, BceServerError):
-            __logger.error('send request failed. Response %s, code: %s, msg: %s'
-                           % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
-        else:
-            __logger.error('send request failed. Unknown exception: %s' % e)
+    # 查询队列列表
+    if pool_id and pool_id != 'aihc-serverless':
+        try:
+            __logger.info('--------------------DescribeQueues start--------------------')
+            response = aihc_client.queue.DescribeQueues(resourcePoolId=pool_id)
+            print(response.raw_data)
+            __logger.info('DescribeQueues: %s', response.__dict__.keys())
+            if hasattr(response, 'queues') and response.queues:
+                queue_id = response.queues[0].queueId
+        except BceHttpClientError as e:
+            if isinstance(e.last_error, BceServerError):
+                __logger.error('send request failed. Response %s, code: %s, msg: %s'
+                               % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
+            else:
+                __logger.error('send request failed. Unknown exception: %s' % e)
+        except Exception as e:
+            __logger.error('Unexpected error: %s' % e)
 
-    # 查询模型版本详情
-    try:
-        __logger.info('--------------------DescribeModelVersion start--------------------')
-        response = aihc_client.model.DescribeModelVersion(modelId=model_id, versionId=version_id)
-        print(response.metadata)
-        print(response.raw_data)
-        __logger.info('DescribeModelVersion: %s', response.__dict__.keys())
-    except BceHttpClientError as e:
-        if isinstance(e.last_error, BceServerError):
-            __logger.error('send request failed. Response %s, code: %s, msg: %s'
-                           % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
-        else:
-            __logger.error('send request failed. Unknown exception: %s' % e)
+    # 查询队列详情
+    if queue_id:
+        try:
+            __logger.info('--------------------DescribeQueue start--------------------')
+            response = aihc_client.queue.DescribeQueue(queueId=queue_id)
+            print(response.raw_data)
+            __logger.info('DescribeQueue: %s', response.__dict__.keys())
+        except BceHttpClientError as e:
+            if isinstance(e.last_error, BceServerError):
+                __logger.error('send request failed. Response %s, code: %s, msg: %s'
+                               % (e.last_error.status_code, e.last_error.code, str(e.last_error)))
+            else:
+                __logger.error('send request failed. Unknown exception: %s' % e)
+        except Exception as e:
+            __logger.error('Unexpected error: %s' % e)
                         
-
 if __name__ == '__main__':
     main()

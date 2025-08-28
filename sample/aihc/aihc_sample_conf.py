@@ -38,4 +38,4 @@ fh.setFormatter(formatter)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
-config = BceClientConfiguration(credentials=BceCredentials(AK, SK), endpoint=HOST)
+config = BceClientConfiguration(credentials=BceCredentials(AK, SK), endpoint=HOST,)

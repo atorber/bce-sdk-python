@@ -16,6 +16,7 @@ def parse_json(http_response, response):
     if body:
         response.__dict__.update(json.loads(
             body, object_hook=dict_to_python_object).__dict__)
+        response.__dict__["raw_data"] = get_utf8_value(body)
     http_response.close()
     return True
 
@@ -96,4 +97,64 @@ def parse_error(http_response, response):
 
     bse = BceServerError(message, code=code, request_id=request_id)
     bse.status_code = http_response.status
+    raise bse
+
+def get_utf8_value(value):
+    """
+    Get the UTF8-encoded version of a value.
+    """
+    if isinstance(value, bytes):
+        return value.decode('utf-8')
+    return value.encode('utf-8')
+
+def aihc_parse_json(http_response, response):
+    body = get_utf8_value(http_response._content)
+    if body:
+        response.__dict__.update(json.loads(
+            body, object_hook=dict_to_python_object).__dict__)
+        response.__dict__["raw_data"] = body
+    http_response.close()
+    return True
+
+def aihc_parse_error(http_response, response):
+    """If the body is not empty, convert it to a python object and set as the value of
+    response.body. http_response is always closed if no error occurs.
+
+    :param http_response: the http_response object returned by HTTPConnection.getresponse()
+    :type http_response: httplib.HTTPResponse
+
+    :param response: general response object which will be returned to the caller
+    :type response: baidubce.BceResponse
+
+    :return: false if http status code is 2xx, raise an error otherwise
+    :rtype bool
+
+    :raise baidubce.exception.BceClientError: if http status code is NOT 2xx
+    """
+
+    if http_response.status_code // 100 == http.client.OK // 100:
+        return False
+    if http_response.status_code // 100 == http.client.CONTINUE // 100:
+        raise BceClientError(b'Can not handle 1xx http status code')
+
+    if (hasattr(http_response, 'status') and http_response.status_code // 100 == http.client.CONTINUE // 100) or (hasattr(http_response, 'status_code') and http_response.status_code // 100 == http.client.CONTINUE // 100):
+        raise BceClientError(b'Can not handle 1xx http status code')
+    bse = None
+
+    body = get_utf8_value(http_response._content)
+    print(body)
+    if body:
+        d = json.loads(compat.convert_to_string(body))
+        # 使用get方法提供默认值，避免KeyError
+        message = d.get('message', d.get('Message', http_response.reason))
+        code = d.get('code', d.get('Code', 'UnknownError'))
+        request_id = d.get('requestId', d.get('RequestId', response.metadata.bce_request_id if hasattr(response, 'metadata') and hasattr(response.metadata, 'bce_request_id') else 'UnknownRequestId'))
+        bse = BceServerError(message, code=code, request_id=request_id)
+    if bse is None:
+        bse = BceServerError(http_response.reason, request_id=response.metadata.bce_request_id if hasattr(response, 'metadata') and hasattr(response.metadata, 'bce_request_id') else 'UnknownRequestId')
+    
+    if hasattr(http_response, 'status_code'):
+        bse.status_code = http_response.status_code
+    else:
+        bse.status_code = http_response.status
     raise bse
