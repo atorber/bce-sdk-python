@@ -104,6 +104,20 @@ def main():
     # create a aihc client
     aihc_client = AihcClient(aihc_sample_conf.config)
 
+    # 创建数据集
+    try:
+        __logger.info('--------------------CreateDataset start--------------------')
+        response = aihc_client.dataset.CreateDataset(
+            name='test_dataset_3xxx',
+            storageType='BOS',
+            storageInstance='aihc-rdw-bj',
+            importFormat='FOLDER',
+            description='test dataset')
+        print(json.dumps(to_dict(response), ensure_ascii=False))
+        __logger.info('CreateDataset: %s', response.__dict__.keys())
+    except BceHttpClientError as e:
+        __logger.error('send request failed. Unknown exception: %s' % e)
+
     # 查询数据集列表
     try:
         __logger.info('--------------------DescribeDatasets start--------------------')

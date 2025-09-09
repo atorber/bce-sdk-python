@@ -15,3 +15,4 @@ sample/aihc/job_config/*.json
 .venv/pyvenv.cfg
 .env
 .qoder/*
+scripts/*
