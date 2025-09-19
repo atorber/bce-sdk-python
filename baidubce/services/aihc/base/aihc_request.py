@@ -200,7 +200,9 @@ def aihc_request(config, response_handler_functions,
     # 打印config.credentials的属性
     # print(dir(config))
 
-    url = 'https://' + get_utf8_value(config.endpoint) + path
+    # 根据配置的协议构建URL
+    protocol = config.protocol.name if hasattr(config, 'protocol') and config.protocol else 'https'
+    url = f'{protocol}://' + get_utf8_value(config.endpoint) + path
     # print(url)
 
     # 将params拼接到url中
