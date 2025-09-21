@@ -13,17 +13,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def get_headers(url, method: str, ak, sk):
-    domain = urllib.parse.urlparse(url).netloc
-    uri = urllib.parse.urlparse(url).path
+    parsed_url = urllib.parse.urlparse(url)
+    domain = parsed_url.netloc
+    uri = parsed_url.path
     gcloud_params = {}
-    if url.find('?') > 0:
-        tmp = url.split('?')[1]
-        for item in tmp.split('&'):
-            if item.find('=') > 0:
-                gcloud_params[item.split('=')[0]] = item.split('=')[1]
+    
+    # 处理查询参数
+    if parsed_url.query:
+        for item in parsed_url.query.split('&'):
+            if '=' in item:
+                key, value = item.split('=', 1)
+                gcloud_params[key] = value
             else:
                 gcloud_params[item] = ""
-        gcloud_uri = url.split('?')[0]
 
     headers = {"x-bce-date": get_canonical_time(), "Content-Type": "application/json", "Host": domain}  #
     bce_request = {
@@ -202,11 +204,20 @@ def aihc_request(config, response_handler_functions,
 
     # 根据配置的协议构建URL
     protocol = config.protocol.name if hasattr(config, 'protocol') and config.protocol else 'https'
-    url = f'{protocol}://' + get_utf8_value(config.endpoint) + path
+    
+    # 处理endpoint，如果已经包含协议，则提取主机名和端口
+    endpoint = get_utf8_value(config.endpoint)
+    if endpoint.startswith('http://') or endpoint.startswith('https://'):
+        # 如果endpoint已经包含协议，直接使用
+        url = endpoint + path
+    else:
+        # 如果endpoint不包含协议，则添加协议
+        url = f'{protocol}://' + endpoint + path
     # print(url)
 
     # 将params拼接到url中
-    url = url + '?' + urllib.parse.urlencode(params)
+    if params is not None:
+        url = url + '?' + urllib.parse.urlencode(params)
 
     # http_method转小写
     http_method = http_method.lower()
